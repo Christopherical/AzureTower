@@ -1,0 +1,10 @@
+Player Movement
+Deltatime
+Collision
+- player collision on enemy is damage?
+-  player collision by projectile
+- player weapon swing into enemy hit box damage?
+- mini invulnerability for player after collision?
+
+enemy automatic movement/attack?
+Multiple scenes

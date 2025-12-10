@@ -8,8 +8,8 @@ int main()
 
     while (game.IsRunning())
     {
-        game.processEvents();
-        // game.Update();
+        game.ProcessEvents();
+        game.Update();
         game.Render();
     }
 }
