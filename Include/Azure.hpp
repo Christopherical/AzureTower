@@ -18,6 +18,8 @@ namespace AzureTower
         sf::Clock clock_;
         sf::Vector2f velocity_{0.f, 0.f}; // For smooth sliding/knockback
 
+        Enemy slime_;
+
     public:
         Game();
         void run();
@@ -26,6 +28,7 @@ namespace AzureTower
         void ProcessEvents();
         void Update();
         void Render();
+        void Knockback();
 
         bool IsRunning() const;
         bool CollisionCheck();

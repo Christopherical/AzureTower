@@ -24,6 +24,7 @@ namespace AzureTower
     {
         int health;
         int speed;
+        float knockBackStrength = KNOCKBACK_STRENGTH;
     };
 
     struct Stats

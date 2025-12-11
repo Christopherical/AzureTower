@@ -12,6 +12,7 @@ namespace AzureTower{
 
     constexpr int SLIME_HEALTH = 50;
     constexpr int SLIME_SPEED = 2;
+    constexpr float KNOCKBACK_STRENGTH = 1000.f;
 
     const std::string FONT_PATH = "Content\\Fonts\\arial.ttf";
     const std::string PLAYER_TEXTURE_PATH = "C:\\Users\\Chris\\Desktop\\rpgPrototype\\AzureTower\\Content\\Textures\\player.png";
