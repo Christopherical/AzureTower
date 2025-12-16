@@ -8,3 +8,5 @@ AllowShortBlocksOnASingleLine: Always
 AllowShortFunctionsOnASingleLine: None
 AllowShortIfStatementsOnASingleLine: Never
 AllowShortLoopsOnASingleLine: false
+BreakConstructorInitializers: BeforeColon
+PackConstructorInitializers: Never

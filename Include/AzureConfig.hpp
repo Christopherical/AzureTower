@@ -2,7 +2,8 @@
 
 #include <string>
 
-namespace AzureTower{
+namespace AzureTower
+{
     constexpr int GAME_WIDTH = 800;
     constexpr int GAME_HEIGHT = 600;
 
@@ -14,6 +15,10 @@ namespace AzureTower{
     constexpr int SLIME_SPEED = 2;
     constexpr float KNOCKBACK_STRENGTH = 1000.f;
 
+    const sf::Vector2f SPRITE_SCALE = {3.f, 3.f};
+
     const std::string FONT_PATH = "Content\\Fonts\\arial.ttf";
-    const std::string PLAYER_TEXTURE_PATH = "C:\\Users\\Chris\\Desktop\\rpgPrototype\\AzureTower\\Content\\Textures\\player.png";
+    const std::string TEXTURE_PATH = "Content\\Textures\\";
+    const std::string PLAYER_TEXTURE_PATH = "Content\\Textures\\player.png";
+    const std::string SLIME_TEXTURE_PATH = "Content\\Textures\\slimeRo.png";
 }

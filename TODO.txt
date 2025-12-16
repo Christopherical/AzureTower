@@ -8,3 +8,14 @@ Collision
 
 enemy automatic movement/attack?
 Multiple scenes
+
+Move to composition rather than inheritance.
+
+Make an EnemyTemplate.
+define two (for example) templates
+const EnemyTemple SLIME_TEMPLATE = {}
+const EnemyTemple DRAGON_TEMPLATE = {}
+
+std::vector<Enemy> enemies_;
+use in its constructor a template to initialize the Enemy itself 
+decoupling it
