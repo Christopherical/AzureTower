@@ -1,6 +1,8 @@
 #pragma once
 
 #include "AzureTypes.hpp"
+#include "TextureManager.hpp"
+#include "Entity.hpp"
 #include <vector>
 #include <optional>
 
@@ -11,10 +13,9 @@ namespace AzureTower
     private:
         sf::RenderWindow window_;
         sf::Clock clock_;
-
+        TextureManager textureManager_;
         Player player_;
         std::vector<Enemy> enemies_;
-
         sf::Vector2f velocity_{0.f, 0.f}; // For smooth sliding/knockback
 
     public:
@@ -29,7 +30,6 @@ namespace AzureTower
         bool CollisionCheck();
 
     private:
-        void InitPlayer();
-        // void InitSlime();
+        // void InitPlayer();
     };
 }

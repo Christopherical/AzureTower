@@ -1,4 +1,5 @@
 #include "Azure.hpp"
+#include "Entity.hpp"
 #include <SFML/Graphics.hpp>
 #include <iostream>
 
@@ -10,29 +11,12 @@ AzureTower::Game::Game()
   window_.setKeyRepeatEnabled(false);
   window_.setFramerateLimit(60);
 
-  InitPlayer();
+  player_.sprite_.emplace(textureManager_.load("player"));
+  player_.InitPlayer();
+  // enemies_.emplace_back(SLIME_NAME, SLIME_HEALTH, SLIME_SPEED, SLIME_KNOCKBACK_STRENGTH, SLIME_POSITION,
 
-  enemies_.emplace_back(std::move(SLIME_TEMPLATE));
-  enemies_.emplace_back(std::move(DRAGON_TEMPLATE));
+  enemies_.emplace_back(SLIME_NAME, SLIME_HEALTH, SLIME_SPEED, SLIME_POSITION, textureManager_.load("slimeRo"));
 }
-
-void Game::InitPlayer()
-{
-  // player_.sprite.emplace(playerTexture_);
-  player_.sprite->setPosition({50.f, 100.f});
-  player_.sprite->setScale(SPRITE_SCALE);
-  sf::FloatRect bounds = player_.sprite->getLocalBounds();
-  player_.sprite->setOrigin({bounds.size.x / 2.f, bounds.size.y / 2.f});
-}
-
-// void Game::InitSlime()
-// {
-//   // slime_.sprite.emplace(slimeTexture_);
-//   slime_.sprite->setPosition({300.f, 400.f});
-//   slime_.sprite->setScale({3.f, 3.f});
-//   sf::FloatRect bounds2 = slime_.sprite->getLocalBounds();
-//   slime_.sprite->setOrigin({bounds2.size.x / 2.f, bounds2.size.y / 2.f});
-// }
 
 void Game::ProcessEvents()
 {
@@ -49,7 +33,9 @@ void Game::ProcessEvents()
       {
         case sf::Keyboard::Key::Escape: std::cout << "Escape pressed\n"; break;
         case sf::Keyboard::Key::Q:
-          std::cout << player_.sprite->getPosition().x << " || " << player_.sprite->getPosition().y << std::endl;
+          if (player_.sprite_)
+            std::cout << player_.sprite_->getPosition().x << " || " << player_.sprite_->getPosition().y << std::endl;
+          break;
         default: break;
       }
     }
@@ -64,28 +50,27 @@ void AzureTower::Game::Update()
   float deltaTime = clock_.restart().asSeconds();
 
   sf::Vector2f movement{0.f, 0.f};
-  sf::Vector2f originalPos = player_.sprite->getPosition();
+  sf::Vector2f originalPos = player_.sprite_->getPosition();
 
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
-    movement.y -= player_.speed * deltaTime;
+    movement.y -= player_.speed_ * deltaTime;
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S))
-    movement.y += player_.speed * deltaTime;
+    movement.y += player_.speed_ * deltaTime;
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
-    movement.x -= player_.speed * deltaTime;
+    movement.x -= player_.speed_ * deltaTime;
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
-    movement.x += player_.speed * deltaTime;
+    movement.x += player_.speed_ * deltaTime;
 
-  // Apply player input movement
-  player_.sprite->move(movement);
+  player_.sprite_->move(movement);
   /*
     // Check collision after movement
-    auto playerBox = player_.sprite->getGlobalBounds();
+    auto playerBox = player_.getGlobalBounds();
     auto enemyBox = slime_.sprite->getGlobalBounds();
 
     if (playerBox.findIntersection(enemyBox))
     {
       // Collision detected - revert position
-      player_.sprite->setPosition(originalPos);
+      player_.setPosition(originalPos);
     }
     */
 }
@@ -93,15 +78,14 @@ void AzureTower::Game::Update()
 void AzureTower::Game::Render()
 {
   window_.clear();
-  if (player_.sprite)
-  {
-    window_.draw(*player_.sprite);
-  }
+
+  window_.draw(*player_.sprite_);
+
   for (auto &enemy : enemies_)
   {
-    if (enemy.sprite)
+    if (enemy.sprite_)
     {
-      window_.draw(*enemy.sprite);
+      window_.draw(*enemy.sprite_);
     }
   }
 
