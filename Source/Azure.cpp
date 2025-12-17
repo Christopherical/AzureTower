@@ -1,21 +1,26 @@
 #include "Azure.hpp"
-#include "Entity.hpp"
+#include "Enemy.hpp"
 #include <SFML/Graphics.hpp>
 #include <iostream>
 
 using namespace AzureTower;
 
 AzureTower::Game::Game()
-    : window_{sf::VideoMode({800, 600}), "Azure Tower"}
+    : window_{sf::VideoMode({1200, 800}), "Azure Tower"}
 {
   window_.setKeyRepeatEnabled(false);
   window_.setFramerateLimit(60);
 
-  player_.sprite_.emplace(textureManager_.load("player"));
+  player_.sprite_.emplace(textureManager_.load("player2"));
   player_.InitPlayer();
-  // enemies_.emplace_back(SLIME_NAME, SLIME_HEALTH, SLIME_SPEED, SLIME_KNOCKBACK_STRENGTH, SLIME_POSITION,
 
-  enemies_.emplace_back(SLIME_NAME, SLIME_HEALTH, SLIME_SPEED, SLIME_POSITION, textureManager_.load("slimeRo"));
+  enemies_.emplace_back(SLIME_NAME, SLIME_HEALTH, SLIME_SPEED, SLIME_POSITION, textureManager_.load(SLIME_NAME));
+  buildings_.emplace_back(1, BUILDING_NAME, BUILDING_POSITION, textureManager_.load(BUILDING_NAME));
+
+  backgroundSprite_.emplace(textureManager_.load("background2"));
+  backgroundSprite_->setPosition({0.f, 0.f});
+  backgroundSprite_->setScale(
+      {1200.f / backgroundSprite_->getTexture().getSize().x, 800.f / backgroundSprite_->getTexture().getSize().y});
 }
 
 void Game::ProcessEvents()
@@ -62,25 +67,52 @@ void AzureTower::Game::Update()
     movement.x += player_.speed_ * deltaTime;
 
   player_.sprite_->move(movement);
-  /*
-    // Check collision after movement
-    auto playerBox = player_.getGlobalBounds();
-    auto enemyBox = slime_.sprite->getGlobalBounds();
 
+  // Check collision after movement
+  auto playerBox = player_.sprite_->getGlobalBounds();
+  for (auto &enemy : enemies_)
+  {
+    auto enemyBox = enemy.sprite_->getGlobalBounds();
     if (playerBox.findIntersection(enemyBox))
     {
-      // Collision detected - revert position
-      player_.setPosition(originalPos);
+      player_.sprite_->setPosition(originalPos);
     }
-    */
+  }
+  
+  for (auto &building : buildings_)
+  {
+    auto buildingBox = building.sprite_->getGlobalBounds();
+    
+    // Remove roof from collision
+    float roofHeight = 60.f;
+    buildingBox.position.y += roofHeight;
+    buildingBox.size.y -= roofHeight;
+    
+    if (playerBox.findIntersection(buildingBox))
+    {
+      player_.sprite_->setPosition(originalPos);
+    }
+  }
+}
+
+void AzureTower::Game::ZoneLoader()
+{
+  // .. TODO
 }
 
 void AzureTower::Game::Render()
 {
   window_.clear();
-
+  window_.draw(*backgroundSprite_);
   window_.draw(*player_.sprite_);
 
+  for (auto &building : buildings_)
+  {
+    if (building.sprite_)
+    {
+      window_.draw(*building.sprite_);
+    }
+  }
   for (auto &enemy : enemies_)
   {
     if (enemy.sprite_)
@@ -88,7 +120,6 @@ void AzureTower::Game::Render()
       window_.draw(*enemy.sprite_);
     }
   }
-
   window_.display();
 }
 
