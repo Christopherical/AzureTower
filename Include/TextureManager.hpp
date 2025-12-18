@@ -9,5 +9,5 @@ private:
     std::unordered_map<std::string, sf::Texture> textures_;
 
 public:
-    sf::Texture &load(const std::string &name);
+    sf::Texture &load(const std::string& name);
 };

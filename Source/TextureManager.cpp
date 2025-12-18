@@ -1,7 +1,7 @@
 #include "TextureManager.hpp"
 #include <iostream>
 
-sf::Texture &TextureManager::load(const std::string &name)
+sf::Texture &TextureManager::load(const std::string& name)
 {
   if (!textures_.contains(name))
   {

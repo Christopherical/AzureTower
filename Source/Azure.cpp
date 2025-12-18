@@ -1,26 +1,54 @@
 #include "Azure.hpp"
 #include "Enemy.hpp"
 #include <SFML/Graphics.hpp>
+#include <algorithm>
 #include <iostream>
+
+////////// TODO - Add different Enemy Types. //////////
+////////// TODO - Add Cooldown for taking damage. //////////
+////////// TODO - Add Knockback? //////////
+////////// TODO - Weapon Swing into Enemy. //////////
+////////// TODO - Add Game Over Screen. //////////
+////////// TODO - Add Movement for Enemies. //////////
+////////// TODO - Add Actual Background. //////////
+////////// TODO - Add SPD Logging. //////////
+////////// TODO - Add Music. //////////
+////////// TODO - Add performance testing with lots of enemies. //////////
 
 using namespace AzureTower;
 
 AzureTower::Game::Game()
-    : window_{sf::VideoMode({1200, 800}), "Azure Tower"}
+    : window_{sf::VideoMode({GAME_WIDTH, GAME_HEIGHT}), "Azure Tower"}
 {
-  window_.setKeyRepeatEnabled(false);
-  window_.setFramerateLimit(60);
-
-  player_.sprite_.emplace(textureManager_.load("player2"));
-  player_.InitPlayer();
+  InitGame();
+  InitPlayer();
 
   enemies_.emplace_back(SLIME_NAME, SLIME_HEALTH, SLIME_SPEED, SLIME_POSITION, textureManager_.load(SLIME_NAME));
   buildings_.emplace_back(1, BUILDING_NAME, BUILDING_POSITION, textureManager_.load(BUILDING_NAME));
+}
 
-  backgroundSprite_.emplace(textureManager_.load("background2"));
+void AzureTower::Game::InitGame()
+{
+  window_.setKeyRepeatEnabled(false);
+  window_.setFramerateLimit(FRAME_RATE);
+  camera_.setSize({CAMERA_WIDTH, CAMERA_HEIGHT});
+
+  backgroundSprite_.emplace(textureManager_.load(BACKGROUND_NAME));
   backgroundSprite_->setPosition({0.f, 0.f});
-  backgroundSprite_->setScale(
-      {1200.f / backgroundSprite_->getTexture().getSize().x, 800.f / backgroundSprite_->getTexture().getSize().y});
+  backgroundSprite_->setScale(SPRITE_SCALE);
+}
+
+void AzureTower::Game::InitPlayer()
+{
+  player_.sprite_.emplace(textureManager_.load(PLAYER_NAME));
+  player_.sprite_->setScale(SPRITE_SCALE);
+  player_.sprite_->setOrigin(player_.sprite_->getLocalBounds().size / 2.f);
+
+   // Position at background center
+  auto bgBounds = backgroundSprite_->getGlobalBounds();
+  player_.sprite_->setPosition(bgBounds.position + bgBounds.size / 2.f);
+  
+  camera_.setCenter(player_.sprite_->getGlobalBounds().position);
 }
 
 void Game::ProcessEvents()
@@ -42,6 +70,20 @@ void Game::ProcessEvents()
             std::cout << player_.sprite_->getPosition().x << " || " << player_.sprite_->getPosition().y << std::endl;
           break;
         default: break;
+      }
+    }
+    else if (auto *scrollEvent = event->getIf<sf::Event::MouseWheelScrolled>())
+    {
+      if (scrollEvent->wheel == sf::Mouse::Wheel::Vertical)
+      {
+        float zoomFactor = (scrollEvent->delta > 0) ? 0.9f : 1.1f;
+        float newZoom = zoomLevel_ * zoomFactor;
+
+        if (newZoom >= MIN_CAMERA_ZOOM && newZoom <= MAX_CAMERA_ZOOM)
+        {
+          zoomLevel_ = newZoom;
+          camera_.zoom(zoomFactor);
+        }
       }
     }
   }
@@ -75,23 +117,29 @@ void AzureTower::Game::Update()
     auto enemyBox = enemy.sprite_->getGlobalBounds();
     if (playerBox.findIntersection(enemyBox))
     {
+      player_.health_ -= 10;
       player_.sprite_->setPosition(originalPos);
     }
   }
-  
+
   for (auto &building : buildings_)
   {
     auto buildingBox = building.sprite_->getGlobalBounds();
-    
+
     // Remove roof from collision
     float roofHeight = 60.f;
     buildingBox.position.y += roofHeight;
     buildingBox.size.y -= roofHeight;
-    
+
     if (playerBox.findIntersection(buildingBox))
     {
       player_.sprite_->setPosition(originalPos);
     }
+  }
+
+  camera_.setCenter(player_.sprite_->getGlobalBounds().position);
+  if(player_.health_ <=0){
+    backgroundSprite_->setColor(sf::Color::Red);
   }
 }
 
@@ -103,6 +151,7 @@ void AzureTower::Game::ZoneLoader()
 void AzureTower::Game::Render()
 {
   window_.clear();
+  window_.setView(camera_);
   window_.draw(*backgroundSprite_);
   window_.draw(*player_.sprite_);
 

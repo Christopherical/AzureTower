@@ -1,31 +1,43 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 
 #include <SFML/Graphics.hpp>
 
 namespace AzureTower
 {
-constexpr int GAME_WIDTH = 800;
-constexpr int GAME_HEIGHT = 600;
+// Game Constants.
+const std::string BACKGROUND_NAME = "background2";
+constexpr int GAME_WIDTH = 1200;
+constexpr int GAME_HEIGHT = 800;
+constexpr float CAMERA_WIDTH = 800.f;
+constexpr float CAMERA_HEIGHT = 600.f;
+constexpr float MIN_CAMERA_ZOOM = 0.5f;
+constexpr float MAX_CAMERA_ZOOM = 3.0f;
+constexpr sf::Vector2f SPRITE_SCALE = {3.f, 3.f};
+constexpr int FRAME_RATE = 60;
 
+
+// Player Constants.
+const std::string PLAYER_NAME = "player2";
 constexpr int PLAYER_HEALTH = 100;
 constexpr int PLAYER_SPEED = 300;
 constexpr int PLAYER_STARTING_GOLD = 500;
 
+// Slime Constants.
 const std::string SLIME_NAME = "slime";
 constexpr int SLIME_HEALTH = 50;
 constexpr int SLIME_SPEED = 2;
 constexpr float SLIME_KNOCKBACK_STRENGTH = 1000.f;
-constexpr sf::Vector2f SLIME_POSITION = {400.f, 200.f};
+constexpr sf::Vector2f SLIME_POSITION = {200.f, 600.f};
 
-const std::string BUILDING_NAME = "house";
+// Building Constants.
+const std::string BUILDING_NAME = "obHouse";
 constexpr sf::Vector2f BUILDING_POSITION = {700.f, 400.f};
 
-const sf::Vector2f SPRITE_SCALE = {3.f, 3.f};
-
-const std::string FONT_PATH = "Content\\Fonts\\arial.ttf";
-const std::string TEXTURE_PATH = "Content\\Textures\\";
-const std::string PLAYER_TEXTURE_PATH = TEXTURE_PATH + "player.png";
-const std::string SLIME_TEXTURE_PATH = TEXTURE_PATH + "slimeRo.png";
+// Path Constants. (Avoiding concatenation so I can use constexpr + string_view)
+constexpr std::string_view FONT_PATH = "Content\\Fonts\\arial.ttf";
+constexpr std::string_view PLAYER_TEXTURE_PATH = "Content\\Textures\\player.png";
+constexpr std::string_view SLIME_TEXTURE_PATH = "Content\\Textures\\slimeRo.png";
 } // namespace AzureTower
