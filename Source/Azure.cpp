@@ -22,9 +22,6 @@ AzureTower::Game::Game()
 {
   InitGame();
   InitPlayer();
-
-  enemies_.emplace_back(SLIME_NAME, SLIME_HEALTH, SLIME_SPEED, SLIME_POSITION, textureManager_.load(SLIME_NAME));
-  buildings_.emplace_back(1, BUILDING_NAME, BUILDING_POSITION, textureManager_.load(BUILDING_NAME));
 }
 
 void AzureTower::Game::InitGame()
@@ -35,7 +32,9 @@ void AzureTower::Game::InitGame()
 
   backgroundSprite_.emplace(textureManager_.load(BACKGROUND_NAME));
   backgroundSprite_->setPosition({0.f, 0.f});
-  backgroundSprite_->setScale(SPRITE_SCALE);
+  backgroundSprite_->setScale({5.f, 5.f});
+
+  enemies_.reserve(MAX_ENEMIES);
 }
 
 void AzureTower::Game::InitPlayer()
@@ -44,10 +43,10 @@ void AzureTower::Game::InitPlayer()
   player_.sprite_->setScale(SPRITE_SCALE);
   player_.sprite_->setOrigin(player_.sprite_->getLocalBounds().size / 2.f);
 
-   // Position at background center
+  // Position at background center
   auto bgBounds = backgroundSprite_->getGlobalBounds();
   player_.sprite_->setPosition(bgBounds.position + bgBounds.size / 2.f);
-  
+
   camera_.setCenter(player_.sprite_->getGlobalBounds().position);
 }
 
@@ -91,14 +90,15 @@ void Game::ProcessEvents()
 
 void AzureTower::Game::Update()
 {
-  sf::Vector2i mousePos = sf::Mouse::getPosition(window_);
-
-  sf::Time elapsed = clock_.getElapsedTime();
   float deltaTime = clock_.restart().asSeconds();
+  if (enemyClock_.getElapsedTime().asSeconds() > 0.1f && enemies_.size() < MAX_ENEMIES)
+  {
+    enemies_.emplace_back(SLIME_NAME, SLIME_HEALTH, SLIME_SPEED, SLIME_POSITION, textureManager_.load(SLIME_NAME));
+    enemyClock_.restart();
+  }
 
+  // Player input & movement.
   sf::Vector2f movement{0.f, 0.f};
-  sf::Vector2f originalPos = player_.sprite_->getPosition();
-
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
     movement.y -= player_.speed_ * deltaTime;
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S))
@@ -107,45 +107,31 @@ void AzureTower::Game::Update()
     movement.x -= player_.speed_ * deltaTime;
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
     movement.x += player_.speed_ * deltaTime;
-
   player_.sprite_->move(movement);
 
-  // Check collision after movement
-  auto playerBox = player_.sprite_->getGlobalBounds();
+  // Enemy movement + boundary check.
   for (auto &enemy : enemies_)
   {
-    auto enemyBox = enemy.sprite_->getGlobalBounds();
-    if (playerBox.findIntersection(enemyBox))
+    enemy.sprite_->move(enemy.Movement2(deltaTime));
+    if (enemy.sprite_->getPosition().y > BOTTOM_THRESHOLD)
     {
-      player_.health_ -= 10;
-      player_.sprite_->setPosition(originalPos);
+      --player_.health_;
+      enemy.isDead_ = true;
     }
   }
 
-  for (auto &building : buildings_)
-  {
-    auto buildingBox = building.sprite_->getGlobalBounds();
+  // Enemy Removal.
+  enemies_.erase(std::remove_if(enemies_.begin(), enemies_.end(), [](const Enemy &enemy) { return enemy.isDead_; }),
+                 enemies_.end());
 
-    // Remove roof from collision
-    float roofHeight = 60.f;
-    buildingBox.position.y += roofHeight;
-    buildingBox.size.y -= roofHeight;
-
-    if (playerBox.findIntersection(buildingBox))
-    {
-      player_.sprite_->setPosition(originalPos);
-    }
-  }
-
+  // Position Camera on Player after movement.
   camera_.setCenter(player_.sprite_->getGlobalBounds().position);
-  if(player_.health_ <=0){
+
+  // Game over updates.
+  if (player_.health_ <= 0)
+  {
     backgroundSprite_->setColor(sf::Color::Red);
   }
-}
-
-void AzureTower::Game::ZoneLoader()
-{
-  // .. TODO
 }
 
 void AzureTower::Game::Render()

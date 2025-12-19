@@ -2,6 +2,7 @@
 
 #include <optional>
 #include <vector>
+#include <array>
 
 #include "Building.hpp"
 #include "Enemy.hpp"
@@ -18,6 +19,7 @@ private:
   sf::RenderWindow window_;
   sf::View camera_;
   sf::Clock clock_;
+  sf::Clock enemyClock_;
   TextureManager textureManager_;
 
   // Game Entities.
@@ -43,7 +45,6 @@ public:
   void Update();
   void Render();
 
-  void ZoneLoader(); // TODO ...
   // void Knockback();
   bool IsRunning() const;
   bool CollisionCheck();

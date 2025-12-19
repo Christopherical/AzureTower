@@ -11,12 +11,15 @@ namespace AzureTower
 class Enemy
 {
 public:
-  std::string name_;
-  int health_;
-  int speed_;
+  std::string name_{};
+  int health_{};
+  int speed_{};
+  bool isDead_{false};
 
   std::optional<sf::Sprite> sprite_;
   Enemy(std::string name, int health, int speed, sf::Vector2f position, sf::Texture &texture);
+
+  sf::Vector2f Movement2(float deltaTime);
 };
 
 } // namespace AzureTower
