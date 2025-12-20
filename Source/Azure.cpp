@@ -65,9 +65,10 @@ void Game::ProcessEvents()
       {
         case sf::Mouse::Button::Left:
           auto mouseWorldPos = window_.mapPixelToCoords(sf::Mouse::getPosition(window_), camera_);
+
           // Testing creation of buildings on mouse click.
           buildings_.emplace_back(1, "house", mouseWorldPos, textureManager_.load("house"));
-          
+
           // Testing clicking on enemies.
           for (auto &enemy : enemies_)
           {
@@ -129,7 +130,44 @@ void AzureTower::Game::Update()
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
     movement.x += player_.speed_ * deltaTime;
   player_.sprite_->move(movement);
+  // TODO ...
+  /*
+  - if enemy in range
+  - create projectile
+  - shoot projectile in direction of enemy
+  - each update relative to deltatime the projectile moves towards enemy
+  - check for projectile x enemy collision
+  - if it hits delete projectile
+  - lower enemy health
+  - some interaction that they've been hit?
+  */
+  // Checking each building against each enemy // TODO Function to work out which enemy is closest.
+  for (auto &building : buildings_)
+  {
+    for (auto &enemy : enemies_)
+    {
+      // TODO - Make this check circular
+      if (building.attackRange_.getGlobalBounds().findIntersection(enemy.sprite_->getGlobalBounds()))
+      {
+        building.buildingShoot(enemy.sprite_->getPosition());
+        auto thingg = (building.sprite_->getPosition() - enemy.sprite_->getPosition());
+        building.projectileDirection_ = thingg;
+        float length =
+            std::sqrt(building.projectileDirection_.x * building.projectileDirection_.x + building.projectileDirection_.y * building.projectileDirection_.y);
+        if (length > 0.001f)
+        {
+          building.projectileDirection_ /= length; // TODO Understand this.
+        }
+      }
+      if(building.projectile_.getGlobalBounds().findIntersection(enemy.sprite_->getGlobalBounds())){
+        enemy.isDead_ = true;
+        building.projectile_ = sf::RectangleShape{};
+      }
+    }
+    building.projectile_.move({-(building.projectileDirection_.x + 50), -(building.projectileDirection_.y + 50)});
 
+    // building.projectile_.move({0.f, -(300 * deltaTime)});
+  }
   // Enemy movement + boundary check.
   for (auto &enemy : enemies_)
   {
@@ -175,6 +213,7 @@ void AzureTower::Game::Render()
     {
       window_.draw(building.attackRange_);
       window_.draw(*building.sprite_);
+      window_.draw(building.projectile_);
     }
   }
 
@@ -190,7 +229,7 @@ bool AzureTower::Game::CollisionCheck()
 {
   return false;
 }
-
+// Add functions for potentially needed classes
 // void Game::Knockback()
 // {
 //   // sf::Vector2i mousePos = sf::Mouse::getPosition(window_);

@@ -14,6 +14,5 @@ public:
 
   std::optional<sf::Sprite> sprite_;
 
-  void CollidesWith(); // TODO ..
 };
 } // namespace AzureTower
