@@ -6,14 +6,15 @@
 
 ////////// TODO - Add different Enemy Types. //////////
 ////////// TODO - Add Cooldown for taking damage. //////////
-////////// TODO - Add Knockback? //////////
-////////// TODO - Weapon Swing into Enemy. //////////
+////////// TODO - Add Weapon Swing into Enemy. //////////
 ////////// TODO - Add Game Over Screen. //////////
 ////////// TODO - Add Movement for Enemies. //////////
 ////////// TODO - Add Actual Background. //////////
 ////////// TODO - Add SPD Logging. //////////
 ////////// TODO - Add Music. //////////
 ////////// TODO - Add performance testing with lots of enemies. //////////
+////////// TODO - Add nemy Pathfinding //////////
+////////// TODO - Add Diagonal movement adjustment 1.4 //////////
 
 using namespace AzureTower;
 
@@ -58,6 +59,26 @@ void Game::ProcessEvents()
     {
       window_.close();
     }
+    else if (auto *mouseEvent = event->getIf<sf::Event::MouseButtonPressed>())
+    {
+      switch (mouseEvent->button)
+      {
+        case sf::Mouse::Button::Left:
+          auto mouseWorldPos = window_.mapPixelToCoords(sf::Mouse::getPosition(window_), camera_);
+          // Testing creation of buildings on mouse click.
+          buildings_.emplace_back(1, "house", mouseWorldPos, textureManager_.load("house"));
+          
+          // Testing clicking on enemies.
+          for (auto &enemy : enemies_)
+          {
+            if (enemy.sprite_->getGlobalBounds().contains(mouseWorldPos))
+            {
+              enemy.sprite_->setColor(sf::Color::Blue);
+              break;
+            }
+          }
+      }
+    }
     else if (auto *keyEvent = event->getIf<sf::Event::KeyPressed>())
     {
       // Handle one-time key presses here (menus, actions, etc.)
@@ -91,7 +112,7 @@ void Game::ProcessEvents()
 void AzureTower::Game::Update()
 {
   float deltaTime = clock_.restart().asSeconds();
-  if (enemyClock_.getElapsedTime().asSeconds() > 0.1f && enemies_.size() < MAX_ENEMIES)
+  if (enemyClock_.getElapsedTime().asSeconds() > 1.0f && enemies_.size() < MAX_ENEMIES)
   {
     enemies_.emplace_back(SLIME_NAME, SLIME_HEALTH, SLIME_SPEED, SLIME_POSITION, textureManager_.load(SLIME_NAME));
     enemyClock_.restart();
@@ -141,13 +162,6 @@ void AzureTower::Game::Render()
   window_.draw(*backgroundSprite_);
   window_.draw(*player_.sprite_);
 
-  for (auto &building : buildings_)
-  {
-    if (building.sprite_)
-    {
-      window_.draw(*building.sprite_);
-    }
-  }
   for (auto &enemy : enemies_)
   {
     if (enemy.sprite_)
@@ -155,6 +169,15 @@ void AzureTower::Game::Render()
       window_.draw(*enemy.sprite_);
     }
   }
+  for (auto &building : buildings_)
+  {
+    if (building.sprite_)
+    {
+      window_.draw(building.attackRange_);
+      window_.draw(*building.sprite_);
+    }
+  }
+
   window_.display();
 }
 

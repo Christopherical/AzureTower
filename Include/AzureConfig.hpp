@@ -11,8 +11,8 @@ namespace AzureTower
 const std::string BACKGROUND_NAME = "backgroundStoneLarge";
 constexpr int GAME_WIDTH = 1000;
 constexpr int GAME_HEIGHT = 1200;
-constexpr float CAMERA_WIDTH = 800.f;
-constexpr float CAMERA_HEIGHT = 600.f;
+constexpr float CAMERA_WIDTH = 1000.f;
+constexpr float CAMERA_HEIGHT = 1200.f;
 constexpr float MIN_CAMERA_ZOOM = 0.5f;
 constexpr float MAX_CAMERA_ZOOM = 3.0f;
 constexpr sf::Vector2f SPRITE_SCALE = {3.f, 3.f};
@@ -30,12 +30,12 @@ constexpr int PLAYER_STARTING_GOLD = 500;
 // Slime Constants.
 const std::string SLIME_NAME = "slime";
 constexpr int SLIME_HEALTH = 50;
-constexpr float SLIME_SPEED = 300;
+constexpr float SLIME_SPEED = 100;
 constexpr float SLIME_KNOCKBACK_STRENGTH = 1000.f;
 constexpr sf::Vector2f SLIME_POSITION = {200.f, 0.f};
 
 // Building Constants.
-const std::string BUILDING_NAME = "obHouse";
+const std::string BUILDING_NAME = "house";
 constexpr sf::Vector2f BUILDING_POSITION = {700.f, 400.f};
 
 // Path Constants. (Avoiding concatenation so I can use constexpr + string_view)
