@@ -18,8 +18,6 @@ public:
 
   std::optional<sf::Sprite> sprite_;
   Enemy(std::string name, int health, int speed, sf::Vector2f position, sf::Texture &texture);
-
-  sf::Vector2f Movement2(float deltaTime);
 };
 
 } // namespace AzureTower

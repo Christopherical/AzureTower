@@ -19,6 +19,7 @@ constexpr sf::Vector2f SPRITE_SCALE = {3.f, 3.f};
 constexpr int FRAME_RATE = 60;
 constexpr int MAX_ENEMIES = 100;
 constexpr int BOTTOM_THRESHOLD = 2350;
+constexpr int WEST_THRESHOLD = 2350;
 
 
 // Player Constants.
@@ -30,13 +31,14 @@ constexpr int PLAYER_STARTING_GOLD = 500;
 // Slime Constants.
 const std::string SLIME_NAME = "slime";
 constexpr int SLIME_HEALTH = 50;
-constexpr float SLIME_SPEED = 100;
+constexpr float SLIME_SPEED = 50;
 constexpr float SLIME_KNOCKBACK_STRENGTH = 1000.f;
-constexpr sf::Vector2f SLIME_POSITION = {200.f, 0.f};
+constexpr sf::Vector2f SLIME_POSITION = {400.f, 0.f};
 
 // Building Constants.
 const std::string BUILDING_NAME = "house";
 constexpr sf::Vector2f BUILDING_POSITION = {700.f, 400.f};
+constexpr float PROJECTILE_SPEED = 30.f;
 
 // Path Constants. (Avoiding concatenation so I can use constexpr + string_view)
 constexpr std::string_view FONT_PATH = "Content\\Fonts\\arial.ttf";
