@@ -15,12 +15,14 @@ public:
   sf::Clock projectileClock_;
   sf::Vector2f projectileDirection_;
   bool projectileDead_;
+  bool AttackRangeOn_{false};
 
   std::string name_{};
   sf::Vector2f position_{};
   sf::CircleShape attackRange_{};
   std::optional<sf::Sprite> sprite_;
   Tower(int zone, std::string name, sf::Vector2f position, sf::Texture &texture);
+  void ToggleAttackRange();
 };
 
 struct Projectile

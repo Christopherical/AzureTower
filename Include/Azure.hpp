@@ -21,6 +21,12 @@ private:
   sf::Clock enemyClock_;
   TextureManager textureManager_;
   sf::Font font_;
+  std::optional<sf::Cursor> cursor_;
+
+  sf::Clock fadeClock_;
+  int fadeCount_ = 80;
+  uint8_t transparentNumber_;
+  bool attackRangeIndicator_ = false;
 
   // Game Entities.
   Player player_;

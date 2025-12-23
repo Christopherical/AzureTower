@@ -5,15 +5,23 @@
 #include <iostream>
 #include <string>
 
+// Today//
+// Sort out sprites and sizes and understand postion relative to local, global, cameras //
+// Cut map up into squares//
+// Redo Map and Perspective? //
+// Change projectile to projectile image // 
+// Wc3 Check against // 
+
+//  One Tower Pixel art. Use Colour pallete. Main colour, shading, highlight.
+//  Shade depending on direction of light.
+//  - Dithering - Anti-Aliasing?
+// Today//
 ////////// TODO - Add different Enemy Types. //////////
-////////// TODO - Add Cooldown for taking damage. //////////
-////////// TODO - Add Weapon Swing into Enemy. //////////
-////////// TODO - Add Game Over Screen. //////////
+////////// TODO2 - Add Game Over Screen. //////////
 ////////// TODO - Add Movement for Enemies. //////////
-////////// TODO - Add Actual Background. //////////
+////////// TODO2 - Add Actual Background. //////////
 ////////// TODO - Add SPD Logging. //////////
 ////////// TODO - Add Music. //////////
-////////// TODO - Add performance testing with lots of enemies. //////////
 ////////// TODO - Add enemy Pathfinding //////////
 // ---NAVIGATION MESH. A*? (Multiple - Crown Simulation,
 // flocking, float fields ,RVO (reciprocal veocity avoidance - good for smaller amounts)
@@ -23,7 +31,7 @@
 using namespace AzureTower;
 
 AzureTower::Game::Game()
-    : window_{sf::VideoMode({GAME_WIDTH, GAME_HEIGHT}), "Azure Tower"},
+    : window_{sf::VideoMode({GAME_WIDTH, GAME_HEIGHT}), "Azure Tower", sf::State::Windowed},
       font_{"C:\\Users\\Chris\\Desktop\\rpgPrototype\\AzureTower\\Content\\Fonts\\arial.ttf"}
 {
   InitGame();
@@ -34,11 +42,16 @@ void AzureTower::Game::InitGame()
 {
   window_.setKeyRepeatEnabled(false);
   window_.setFramerateLimit(FRAME_RATE);
+
+  sf::Image cursorImage{YELLOWBALL_TEXTURE_PATH};
+  cursor_.emplace(cursorImage.getPixelsPtr(), cursorImage.getSize(), sf::Vector2u{0, 0});
+  window_.setMouseCursor(cursor_.value());
+
   camera_.setSize({CAMERA_WIDTH, CAMERA_HEIGHT});
 
   backgroundSprite_.emplace(textureManager_.load(BACKGROUND_NAME));
   backgroundSprite_->setPosition({0.f, 0.f});
-  backgroundSprite_->setScale({5.f, 5.f});
+  // backgroundSprite_->setScale({1.f, 1.f});
 
   enemies_.reserve(MAX_ENEMIES);
 }
@@ -46,7 +59,7 @@ void AzureTower::Game::InitGame()
 void AzureTower::Game::InitPlayer()
 {
   player_.sprite_.emplace(textureManager_.load(PLAYER_NAME));
-  player_.sprite_->setScale(SPRITE_SCALE);
+  // player_.sprite_->setScale(SPRITE_SCALE);
   player_.sprite_->setOrigin(player_.sprite_->getLocalBounds().size / 2.f);
 
   // Position at background center
@@ -95,6 +108,8 @@ void Game::ProcessEvents()
           if (player_.sprite_)
             std::cout << player_.sprite_->getPosition().x << " || " << player_.sprite_->getPosition().y << std::endl;
           break;
+        case sf::Keyboard::Key::F: // Toggle Attack Range Indicators.
+          attackRangeIndicator_ = (attackRangeIndicator_) ? false : true;
         default: break;
       }
     }
@@ -148,6 +163,16 @@ void AzureTower::Game::Update()
     for (auto &tower : towers_)
     {
       TowerCollisionCheck(tower);
+    }
+
+    // Testing Fading - TODO - Make a class/Func
+    if (fadeClock_.getElapsedTime().asSeconds() > 0.1)
+    {
+      fadeClock_.restart();
+      fadeCount_ += 15;
+      int cycle = fadeCount_ % 512;
+      int rawCycle = (cycle < 256) ? cycle : 511 - cycle;
+      transparentNumber_ = 80 + (rawCycle * 120 / 255);
     }
 
     // End of Frame updates - Removal, Camera set, Game over check.
@@ -267,8 +292,11 @@ void AzureTower::Game::Render()
   {
     if (tower.sprite_)
     {
-      window_.draw(tower.attackRange_);
       window_.draw(*tower.sprite_);
+      if (attackRangeIndicator_)
+      {
+        window_.draw(tower.attackRange_);
+      }
     }
   }
   for (auto &projectile : projectiles_)
@@ -276,6 +304,21 @@ void AzureTower::Game::Render()
     window_.draw(projectile.projectile_);
   }
 
+  // Testing Fading
+  // TODO - Add Fade Utility Function
+  sf::RectangleShape tile2;
+  tile2.setPosition({700, 1000});
+  tile2.setSize({48, 48});
+  sf::Color blueFade = sf::Color{0, 0, 255, transparentNumber_};
+  tile2.setFillColor(blueFade);
+
+  // TODO Understand mapPixelToCoords better
+  auto mouseWorldPos = window_.mapPixelToCoords(sf::Mouse::getPosition(window_), camera_);
+  if (tile2.getGlobalBounds().contains(mouseWorldPos))
+  {
+    window_.draw(tile2);
+  }
+  // Testing Fading
   window_.display();
 }
 

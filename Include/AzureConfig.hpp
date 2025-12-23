@@ -44,4 +44,5 @@ constexpr float PROJECTILE_SPEED = 30.f;
 constexpr std::string_view FONT_PATH = "Content\\Fonts\\arial.ttf";
 constexpr std::string_view PLAYER_TEXTURE_PATH = "Content\\Textures\\player.png";
 constexpr std::string_view SLIME_TEXTURE_PATH = "Content\\Textures\\slimeRo.png";
+const std::string YELLOWBALL_TEXTURE_PATH = "Content\\Textures\\MediumYellowBall.png";
 } // namespace AzureTower
