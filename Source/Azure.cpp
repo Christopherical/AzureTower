@@ -9,8 +9,8 @@
 // Sort out sprites and sizes and understand postion relative to local, global, cameras //
 // Cut map up into squares//
 // Redo Map and Perspective? //
-// Change projectile to projectile image // 
-// Wc3 Check against // 
+// Change projectile to projectile image //
+// Wc3 Check against //
 
 //  One Tower Pixel art. Use Colour pallete. Main colour, shading, highlight.
 //  Shade depending on direction of light.
@@ -31,7 +31,7 @@
 using namespace AzureTower;
 
 AzureTower::Game::Game()
-    : window_{sf::VideoMode({GAME_WIDTH, GAME_HEIGHT}), "Azure Tower", sf::State::Windowed},
+    : window_{sf::VideoMode({GAME_WIDTH, GAME_HEIGHT}), "Azure Tower"},
       font_{"C:\\Users\\Chris\\Desktop\\rpgPrototype\\AzureTower\\Content\\Fonts\\arial.ttf"}
 {
   InitGame();
@@ -43,7 +43,7 @@ void AzureTower::Game::InitGame()
   window_.setKeyRepeatEnabled(false);
   window_.setFramerateLimit(FRAME_RATE);
 
-  sf::Image cursorImage{YELLOWBALL_TEXTURE_PATH};
+  sf::Image cursorImage{"C:\\Users\\Chris\\Desktop\\rpgPrototype\\AzureTower\\Content\\Textures\\MediumYellowBall.png"};
   cursor_.emplace(cursorImage.getPixelsPtr(), cursorImage.getSize(), sf::Vector2u{0, 0});
   window_.setMouseCursor(cursor_.value());
 
@@ -54,6 +54,8 @@ void AzureTower::Game::InitGame()
   // backgroundSprite_->setScale({1.f, 1.f});
 
   enemies_.reserve(MAX_ENEMIES);
+  towers_.reserve(MAX_TOWERS);
+  projectiles_.reserve(MAX_PROJECTILES);
 }
 
 void AzureTower::Game::InitPlayer()
@@ -132,58 +134,64 @@ void Game::ProcessEvents()
 
 void AzureTower::Game::Update()
 {
-  if (!gameOver_)
+  if (gameOver_)
+    return;
+
+  float deltaTime = clock_.restart().asSeconds();
+  spawnSlime();
+
+  // Player input & movement.
+  sf::Vector2f movement{0.f, 0.f};
+  if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
+    movement.y -= player_.speed_ * deltaTime;
+  if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S))
+    movement.y += player_.speed_ * deltaTime;
+  if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
+    movement.x -= player_.speed_ * deltaTime;
+  if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
+    movement.x += player_.speed_ * deltaTime;
+  player_.sprite_->move(movement);
+
+  // Movement + Collision checks.
+  float slimeMovement = SLIME_SPEED * deltaTime; // TODO - Currently Hardcoded
+  for (auto &enemy : enemies_)
   {
-    float deltaTime = clock_.restart().asSeconds();
-    spawnSlime();
-
-    // Player input & movement.
-    sf::Vector2f movement{0.f, 0.f};
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
-      movement.y -= player_.speed_ * deltaTime;
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S))
-      movement.y += player_.speed_ * deltaTime;
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
-      movement.x -= player_.speed_ * deltaTime;
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
-      movement.x += player_.speed_ * deltaTime;
-    player_.sprite_->move(movement);
-
-    // Movement + Collision checks.
-    for (auto &enemy : enemies_)
-    {
-      enemy.sprite_->move({0.f, (SLIME_SPEED * deltaTime)});
-      EnemyCollisionCheck(enemy);
-    }
-    for (auto &projectile : projectiles_)
-    {
-      projectile.projectile_.move(projectile.direction_ * PROJECTILE_SPEED);
-      ProjectileCollisionCheck(projectile);
-    }
-    for (auto &tower : towers_)
-    {
-      TowerCollisionCheck(tower);
-    }
-
-    // Testing Fading - TODO - Make a class/Func
-    if (fadeClock_.getElapsedTime().asSeconds() > 0.1)
-    {
-      fadeClock_.restart();
-      fadeCount_ += 15;
-      int cycle = fadeCount_ % 512;
-      int rawCycle = (cycle < 256) ? cycle : 511 - cycle;
-      transparentNumber_ = 80 + (rawCycle * 120 / 255);
-    }
-
-    // End of Frame updates - Removal, Camera set, Game over check.
-    enemies_.erase(std::remove_if(enemies_.begin(), enemies_.end(), [](const Enemy &enemy) { return enemy.isDead_; }),
-                   enemies_.end());
-    projectiles_.erase(std::remove_if(projectiles_.begin(), projectiles_.end(),
-                                      [](const Projectile &projectile) { return projectile.isDead_; }),
-                       projectiles_.end());
-    camera_.setCenter(player_.sprite_->getGlobalBounds().position);
-    GameOver();
+    enemy.sprite_->move({0.f, slimeMovement});
+    EnemyCollisionCheck(enemy);
   }
+  for (auto &projectile : projectiles_)
+  {
+    projectile.projectileSprite_->move(projectile.direction_ * PROJECTILE_SPEED);
+    ProjectileCollisionCheck(projectile);
+  }
+  for (auto &tower : towers_)
+  {
+    TowerCollisionCheck(tower); // TODO - Potentially change to: (Inverting the loop)
+    //       for (auto &enemy : enemies_) {
+    //   for (auto &tower : towers_) {
+    //     if (towerCanHitEnemy(tower, enemy)) { ... break; }
+    //   }
+    // }
+  }
+
+  // Testing Fading - TODO - Make a class/Func
+  if (fadeClock_.getElapsedTime().asSeconds() > 0.1)
+  {
+    fadeClock_.restart();
+    fadeCount_ += 15;
+    int cycle = fadeCount_ % 512;
+    int rawCycle = (cycle < 256) ? cycle : 511 - cycle;
+    transparentNumber_ = 80 + (rawCycle * 120 / 255);
+  }
+
+  // End of Frame updates - Removal, Camera set, Game over check.
+  enemies_.erase(std::remove_if(enemies_.begin(), enemies_.end(), [](const Enemy &enemy) { return enemy.isDead_; }),
+                 enemies_.end());
+  projectiles_.erase(std::remove_if(projectiles_.begin(), projectiles_.end(),
+                                    [](const Projectile &projectile) { return projectile.isDead_; }),
+                     projectiles_.end());
+  camera_.setCenter(player_.sprite_->getGlobalBounds().position);
+  GameOver();
 }
 
 void AzureTower::Game::EnemyCollisionCheck(Enemy &enemy)
@@ -197,18 +205,24 @@ void AzureTower::Game::EnemyCollisionCheck(Enemy &enemy)
 
 void AzureTower::Game::ProjectileCollisionCheck(Projectile &projectile)
 {
+  if (projectile.isDead_)
+    return;
+
+  auto projectileBounds = projectile.projectileSprite_->getGlobalBounds();
   for (auto &enemy : enemies_)
   {
-    if (projectile.projectile_.getGlobalBounds().findIntersection(enemy.sprite_->getGlobalBounds()))
+    if (projectileBounds.findIntersection(enemy.sprite_->getGlobalBounds()))
     {
       // TODO - Play Hit Sound.
       enemy.isDead_ = true;
       projectile.isDead_ = true;
+      break;
     }
   }
   // TODO - Change from hardcoded.
-  if (projectile.projectile_.getPosition().y > BOTTOM_THRESHOLD || projectile.projectile_.getPosition().x < 0 ||
-      projectile.projectile_.getPosition().y < 0 || projectile.projectile_.getPosition().x > 1195)
+  if (projectile.projectileSprite_->getPosition().y > BOTTOM_THRESHOLD ||
+      projectile.projectileSprite_->getPosition().x < 0 || projectile.projectileSprite_->getPosition().y < 0 ||
+      projectile.projectileSprite_->getPosition().x > 1195)
   {
     projectile.isDead_ = true;
   }
@@ -216,27 +230,25 @@ void AzureTower::Game::ProjectileCollisionCheck(Projectile &projectile)
 
 void AzureTower::Game::TowerCollisionCheck(Tower &tower)
 {
-  if (tower.projectileClock_.getElapsedTime().asSeconds() > 0.5f)
-  {
-    tower.projectileClock_.restart();
-    for (auto &enemy : enemies_)
-    {
-      // Check if enemy is within circular attack range
-      sf::Vector2f towerPos = tower.sprite_->getPosition();
-      sf::Vector2f enemyPos = enemy.sprite_->getPosition();
-      float dx = enemyPos.x - towerPos.x;
-      float dy = enemyPos.y - towerPos.y;
-      float distance = std::sqrt(dx * dx + dy * dy);
+  if (tower.projectileClock_.getElapsedTime().asSeconds() <= 0.5f)
+    return;
 
-      if (distance <= tower.attackRange_.getRadius())
-      {
-        sf::Vector2f direction = enemyPos - towerPos;
-        float length = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-        if (length > 0.001f)
-          tower.projectileDirection_ = direction / length;
-        projectiles_.emplace_back(tower.projectileDirection_, towerPos);
-        break;
-      }
+  sf::Vector2f towerPos = tower.sprite_->getPosition();
+  tower.projectileClock_.restart();
+  for (auto &enemy : enemies_)
+  {
+    // Check if enemy is within circular attack range
+    sf::Vector2f enemyPos = enemy.sprite_->getPosition();
+    float dx = enemyPos.x - towerPos.x;
+    float dy = enemyPos.y - towerPos.y;
+    float distance = std::sqrt(dx * dx + dy * dy);
+
+    if (distance <= tower.attackRange_.getRadius())
+    {
+      if (distance > 0.001f)
+        tower.projectileDirection_ = sf::Vector2f(dx, dy) / distance;
+      projectiles_.emplace_back(tower.projectileDirection_, towerPos, textureManager_.load("MediumYellowBall"));
+      break;
     }
   }
 }
@@ -301,7 +313,7 @@ void AzureTower::Game::Render()
   }
   for (auto &projectile : projectiles_)
   {
-    window_.draw(projectile.projectile_);
+    window_.draw(*projectile.projectileSprite_);
   }
 
   // Testing Fading
@@ -313,7 +325,7 @@ void AzureTower::Game::Render()
   tile2.setFillColor(blueFade);
 
   // TODO Understand mapPixelToCoords better
-  auto mouseWorldPos = window_.mapPixelToCoords(sf::Mouse::getPosition(window_), camera_);
+  auto mouseWorldPos = window_.mapPixelToCoords(sf::Mouse::getPosition(window_), camera_); // TODO Hoist
   if (tile2.getGlobalBounds().contains(mouseWorldPos))
   {
     window_.draw(tile2);

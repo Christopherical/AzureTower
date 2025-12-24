@@ -16,14 +16,3 @@ AzureTower::Tower::Tower(int zone, std::string name, sf::Vector2f position, sf::
   attackRange_.setPosition(position);
   attackRange_.setFillColor(sf::Color(0, 255, 255, 50));
 }
-
-// void AzureTower::Tower::ToggleAttackRange()
-// {
-//   // TODO - Add Logging.
-//   if(AttackRangeOn_){
-//     AttackRangeOn_ = false;
-//   }
-//   else{
-//     AttackRangeOn_ = true;
-//   }
-// }

@@ -22,21 +22,20 @@ public:
   sf::CircleShape attackRange_{};
   std::optional<sf::Sprite> sprite_;
   Tower(int zone, std::string name, sf::Vector2f position, sf::Texture &texture);
-  void ToggleAttackRange();
 };
 
 struct Projectile
 {
-  sf::RectangleShape projectile_;
+  std::optional<sf::Sprite> projectileSprite_;
   sf::Vector2f direction_;
   bool isDead_ = false;
-  Projectile(sf::Vector2f direction, sf::Vector2f TowerPos)
+  Projectile(sf::Vector2f direction, sf::Vector2f TowerPos, sf::Texture &texture)
       : direction_(direction)
   {
-    projectile_.setSize({40.f, 60.f});
-    projectile_.setOrigin(projectile_.getGeometricCenter());
-    projectile_.setPosition(TowerPos);
-    projectile_.setFillColor(sf::Color::Red);
+    projectileSprite_.emplace(texture);
+    projectileSprite_->setOrigin(projectileSprite_->getLocalBounds().size / 2.f);
+    projectileSprite_->setPosition(TowerPos);
+
   }
 };
 } // namespace AzureTower
