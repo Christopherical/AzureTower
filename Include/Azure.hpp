@@ -8,6 +8,7 @@
 #include "Player.hpp"
 #include "TextureManager.hpp"
 #include "Tower.hpp"
+#include "tilemap.hpp"
 
 namespace AzureTower
 {
@@ -39,8 +40,8 @@ private:
   float zoomLevel_ = 1.0f;
 
   // Graphics.
-  std::optional<sf::Sprite> backgroundSprite_;
   std::optional<sf::Text> gameOverText_;
+  TileMap backgroundTilemap_;
 
 public:
   bool gameOver_ = false;

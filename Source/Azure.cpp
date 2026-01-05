@@ -1,9 +1,15 @@
 #include "Azure.hpp"
 #include "Enemy.hpp"
+#include "tilemap.hpp"
+
 #include <SFML/Graphics.hpp>
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <string>
+
+
+// TODO - Create new tilemap. Have it so the connecting pixels are the same so they can be mixed up and not look incorrect
 
 // Today//
 // Sort out sprites and sizes and understand postion relative to local, global, cameras //
@@ -31,8 +37,8 @@
 using namespace AzureTower;
 
 AzureTower::Game::Game()
-    : window_{sf::VideoMode({GAME_WIDTH, GAME_HEIGHT}), "Azure Tower"},
-      font_{"C:\\Users\\Chris\\Desktop\\rpgPrototype\\AzureTower\\Content\\Fonts\\arial.ttf"}
+    : window_{sf::VideoMode({GAME_WIDTH, GAME_HEIGHT}), "Azure Tower", sf::State::Fullscreen},
+      font_{FONT_PATH}
 {
   InitGame();
   InitPlayer();
@@ -43,30 +49,34 @@ void AzureTower::Game::InitGame()
   window_.setKeyRepeatEnabled(false);
   window_.setFramerateLimit(FRAME_RATE);
 
-  sf::Image cursorImage{"C:\\Users\\Chris\\Desktop\\rpgPrototype\\AzureTower\\Content\\Textures\\MediumYellowBall.png"};
+  sf::Image cursorImage{CURSOR_TEXTURE_PATH};
   cursor_.emplace(cursorImage.getPixelsPtr(), cursorImage.getSize(), sf::Vector2u{0, 0});
   window_.setMouseCursor(cursor_.value());
 
   camera_.setSize({CAMERA_WIDTH, CAMERA_HEIGHT});
 
-  backgroundSprite_.emplace(textureManager_.load(BACKGROUND_NAME));
-  backgroundSprite_->setPosition({0.f, 0.f});
-  // backgroundSprite_->setScale({1.f, 1.f});
-
   enemies_.reserve(MAX_ENEMIES);
   towers_.reserve(MAX_TOWERS);
   projectiles_.reserve(MAX_PROJECTILES);
+
+  if (!backgroundTilemap_.load(
+          "C:\\Users\\Chris\\Desktop\\rpgPrototype\\AzureTower\\Content\\Textures\\StoneTileMap2.png", {32, 32},
+          LEVEL_ONE.data(), 24, 13))
+  {
+    std::cerr << "Failed to load tilemap!" << std::endl;
+  }
+  backgroundTilemap_.setScale({5.f, 5.f});
 }
 
 void AzureTower::Game::InitPlayer()
 {
   player_.sprite_.emplace(textureManager_.load(PLAYER_NAME));
-  // player_.sprite_->setScale(SPRITE_SCALE);
+  player_.sprite_->setScale(SPRITE_SCALE);
   player_.sprite_->setOrigin(player_.sprite_->getLocalBounds().size / 2.f);
 
-  // Position at background center
-  auto bgBounds = backgroundSprite_->getGlobalBounds();
-  player_.sprite_->setPosition(bgBounds.position + bgBounds.size / 2.f);
+  // // Position at background center
+  // auto bgBounds = backgroundSprite_->getGlobalBounds();
+  // player_.sprite_->setPosition(bgBounds.position + bgBounds.size / 2.f);
 
   camera_.setCenter(player_.sprite_->getGlobalBounds().position);
 }
@@ -83,21 +93,21 @@ void Game::ProcessEvents()
     {
       switch (mouseEvent->button)
       {
-        case sf::Mouse::Button::Left:
-          auto mouseWorldPos = window_.mapPixelToCoords(sf::Mouse::getPosition(window_), camera_);
+        // case sf::Mouse::Button::Left:
+        //   auto mouseWorldPos = window_.mapPixelToCoords(sf::Mouse::getPosition(window_), camera_);
 
-          // Testing creation of buildings on mouse click.
-          towers_.emplace_back(1, "house", mouseWorldPos, textureManager_.load("house"));
+        //   // Testing creation of buildings on mouse click.
+        //   towers_.emplace_back(1, "house", mouseWorldPos, textureManager_.load("house"));
 
-          // Testing clicking on enemies.
-          for (auto &enemy : enemies_)
-          {
-            if (enemy.sprite_->getGlobalBounds().contains(mouseWorldPos))
-            {
-              enemy.sprite_->setColor(sf::Color::Blue);
-              break;
-            }
-          }
+        //   // Testing clicking on enemies.
+        //   for (auto &enemy : enemies_)
+        //   {
+        //     if (enemy.sprite_->getGlobalBounds().contains(mouseWorldPos))
+        //     {
+        //       enemy.sprite_->setColor(sf::Color::Blue);
+        //       break;
+        //     }
+        //   }
       }
     }
     else if (auto *keyEvent = event->getIf<sf::Event::KeyPressed>())
@@ -105,30 +115,26 @@ void Game::ProcessEvents()
       // Handle one-time key presses here (menus, actions, etc.)
       switch (keyEvent->code)
       {
-        case sf::Keyboard::Key::Escape: std::cout << "Escape pressed\n"; break;
-        case sf::Keyboard::Key::Q:
-          if (player_.sprite_)
-            std::cout << player_.sprite_->getPosition().x << " || " << player_.sprite_->getPosition().y << std::endl;
-          break;
+        case sf::Keyboard::Key::Escape: window_.close(); break;
         case sf::Keyboard::Key::F: // Toggle Attack Range Indicators.
           attackRangeIndicator_ = (attackRangeIndicator_) ? false : true;
         default: break;
       }
     }
-    else if (auto *scrollEvent = event->getIf<sf::Event::MouseWheelScrolled>())
-    {
-      if (scrollEvent->wheel == sf::Mouse::Wheel::Vertical)
-      {
-        float zoomFactor = (scrollEvent->delta > 0) ? 0.9f : 1.1f;
-        float newZoom = zoomLevel_ * zoomFactor;
+    // else if (auto *scrollEvent = event->getIf<sf::Event::MouseWheelScrolled>())
+    // {
+    //   if (scrollEvent->wheel == sf::Mouse::Wheel::Vertical)
+    //   {
+    //     float zoomFactor = (scrollEvent->delta > 0) ? 0.9f : 1.1f;
+    //     float newZoom = zoomLevel_ * zoomFactor;
 
-        if (newZoom >= MIN_CAMERA_ZOOM && newZoom <= MAX_CAMERA_ZOOM)
-        {
-          zoomLevel_ = newZoom;
-          camera_.zoom(zoomFactor);
-        }
-      }
-    }
+    //     if (newZoom >= MIN_CAMERA_ZOOM && newZoom <= MAX_CAMERA_ZOOM)
+    //     {
+    //       zoomLevel_ = newZoom;
+    //       camera_.zoom(zoomFactor);
+    //     }
+    //   }
+    // }
   }
 }
 
@@ -190,7 +196,11 @@ void AzureTower::Game::Update()
   projectiles_.erase(std::remove_if(projectiles_.begin(), projectiles_.end(),
                                     [](const Projectile &projectile) { return projectile.isDead_; }),
                      projectiles_.end());
-  camera_.setCenter(player_.sprite_->getGlobalBounds().position);
+  
+  // Round camera position to whole pixels to prevent tile rippling
+  sf::Vector2f playerPos = player_.sprite_->getGlobalBounds().position;
+  camera_.setCenter({std::round(playerPos.x), std::round(playerPos.y)});
+  
   GameOver();
 }
 
@@ -198,7 +208,7 @@ void AzureTower::Game::EnemyCollisionCheck(Enemy &enemy)
 {
   if (enemy.sprite_->getPosition().y > BOTTOM_THRESHOLD)
   {
-    player_.health_ = player_.health_ - 50;
+    player_.health_ = player_.health_ - 50; // TODO - Add Health
     enemy.isDead_ = true;
   }
 }
@@ -264,7 +274,7 @@ void AzureTower::Game::spawnSlime()
 
 void AzureTower::Game::GameOver()
 {
-  if (player_.health_ <= 0)
+  if (player_.health_ <= 0) // TODO Add Health
   {
     gameOverText_.emplace(font_);
     gameOverText_->setString("GAME OVER");
@@ -280,17 +290,19 @@ void AzureTower::Game::Render()
   window_.clear();
   window_.setView(camera_);
 
+  // Draw tilemap background first
+  window_.draw(backgroundTilemap_);
+
   // Handle game over screen
   if (gameOver_ && gameOverText_)
   {
-    gameOverText_->setPosition(camera_.getCenter());
+    // gameOverText_->setPosition(camera_.getCenter()); 
     window_.draw(*gameOverText_);
     window_.display();
     return;
   }
 
   // Normal game rendering
-  window_.draw(*backgroundSprite_);
   window_.draw(*player_.sprite_);
 
   for (auto &enemy : enemies_)
@@ -315,22 +327,7 @@ void AzureTower::Game::Render()
   {
     window_.draw(*projectile.projectileSprite_);
   }
-
-  // Testing Fading
-  // TODO - Add Fade Utility Function
-  sf::RectangleShape tile2;
-  tile2.setPosition({700, 1000});
-  tile2.setSize({48, 48});
-  sf::Color blueFade = sf::Color{0, 0, 255, transparentNumber_};
-  tile2.setFillColor(blueFade);
-
-  // TODO Understand mapPixelToCoords better
-  auto mouseWorldPos = window_.mapPixelToCoords(sf::Mouse::getPosition(window_), camera_); // TODO Hoist
-  if (tile2.getGlobalBounds().contains(mouseWorldPos))
-  {
-    window_.draw(tile2);
-  }
-  // Testing Fading
+  // window_.draw(*backgroundSprite_);
   window_.display();
 }
 
