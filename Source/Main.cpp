@@ -1,5 +1,5 @@
 #include <SFML/Graphics.hpp>
-
+#include <iostream>
 #include "Azure.hpp"
 
 // Tell NVIDIA and AMD drivers to use dedicated GPU
@@ -11,8 +11,7 @@ extern "C"
 
 int main()
 {
-  AzureTower::Game game;
-
+  AzureTower::Game game;  
   while (game.IsRunning())
   {
     game.ProcessEvents();

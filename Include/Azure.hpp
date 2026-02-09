@@ -7,7 +7,6 @@
 #include "Enemy.hpp"
 #include "Player.hpp"
 #include "TextureManager.hpp"
-#include "Tower.hpp"
 #include "tilemap.hpp"
 
 namespace AzureTower
@@ -32,8 +31,6 @@ private:
   // Game Entities.
   Player player_;
   std::vector<Enemy> enemies_;
-  std::vector<Tower> towers_;
-  std::vector<Projectile> projectiles_;
 
   // State.
   sf::Vector2f velocity_{0.f, 0.f}; // For smooth sliding/knockback
@@ -55,8 +52,7 @@ public:
   void Render();
   void GameOver();
   void EnemyCollisionCheck(Enemy& enemy);
-  void ProjectileCollisionCheck(Projectile & enemy);
-  void TowerCollisionCheck(Tower& tower);
+  sf::Vector2f enemySpawnPosition(sf::FloatRect playerPosition);
   // void Knockback();
   bool IsRunning() const;
   void spawnSlime();
