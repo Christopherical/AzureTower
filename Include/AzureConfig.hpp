@@ -7,6 +7,8 @@
 
 namespace AzureTower
 {
+constexpr float PI = 3.14159265f;
+
 // Game Constants.
 const std::string BACKGROUND_NAME = "backgroundStoneLarge";
 constexpr int GAME_WIDTH = 1000;
@@ -35,6 +37,7 @@ constexpr int SLIME_HEALTH = 50;
 constexpr float SLIME_SPEED = 50;
 constexpr float SLIME_KNOCKBACK_STRENGTH = 1000.f;
 constexpr sf::Vector2f SLIME_POSITION = {400.f, 0.f};
+constexpr float SPAWN_RADIUS = 200.0f;
 
 // Building Constants.
 const std::string BUILDING_NAME = "house";

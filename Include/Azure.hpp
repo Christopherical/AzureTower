@@ -3,6 +3,7 @@
 #include <array>
 #include <optional>
 #include <vector>
+#include <random>
 
 #include "Enemy.hpp"
 #include "Player.hpp"
@@ -35,6 +36,9 @@ private:
   // State.
   sf::Vector2f velocity_{0.f, 0.f}; // For smooth sliding/knockback
   float zoomLevel_ = 1.0f;
+  std::random_device rd;
+  std::mt19937 gen_;
+  std::uniform_real_distribution<float> angleDist_;
 
   // Graphics.
   std::optional<sf::Text> gameOverText_;
@@ -52,7 +56,7 @@ public:
   void Render();
   void GameOver();
   void EnemyCollisionCheck(Enemy& enemy);
-  sf::Vector2f enemySpawnPosition(sf::FloatRect playerPosition);
+
   // void Knockback();
   bool IsRunning() const;
   void spawnSlime();

@@ -6,13 +6,16 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <random>
 #include <string>
 
 using namespace AzureTower;
 
 AzureTower::Game::Game()
     : window_{sf::VideoMode({GAME_WIDTH, GAME_HEIGHT}), "Azure Tower", sf::State::Fullscreen},
-      font_{FONT_PATH}
+      font_{FONT_PATH},
+      gen_(rd()),
+      angleDist_(0.0f, 2.0f * PI)
 {
   InitGame();
   InitPlayer();
@@ -117,7 +120,11 @@ void AzureTower::Game::Update()
     return;
 
   float deltaTime = clock_.restart().asSeconds();
-  spawnSlime();
+  
+  if (enemyClock_.getElapsedTime().asSeconds() > 2.0f && enemies_.size() < MAX_ENEMIES)
+  {
+    spawnSlime();
+  }  
 
   // Player input & movement.
   sf::Vector2f movement{0.f, 0.f};
@@ -132,12 +139,26 @@ void AzureTower::Game::Update()
   player_.sprite_->move(movement);
 
   // Movement + Collision checks.
-  float slimeMovement = SLIME_SPEED * deltaTime; // TODO - Currently Hardcoded
-  auto playerPosition = player_.sprite_->getGlobalBounds();
-
+  auto playerPos = player_.sprite_->getGlobalBounds().position;
   for (auto &enemy : enemies_)
   {
-    enemy.sprite_->move({0.f, slimeMovement});
+    auto enemyPos = enemy.sprite_->getGlobalBounds().position;
+    
+    // Calculate direction vector
+    float dx = playerPos.x - enemyPos.x;
+    float dy = playerPos.y - enemyPos.y;
+    
+    // Calculate distance (magnitude)
+    float distance = std::sqrt(dx * dx + dy * dy);
+    
+    // Normalize and apply constant speed (only if distance > 0 to avoid division by zero)
+    if (distance > 0.0f)
+    {
+      float moveX = (dx / distance) * SLIME_SPEED * deltaTime;
+      float moveY = (dy / distance) * SLIME_SPEED * deltaTime;
+      enemy.sprite_->move({moveX, moveY});
+    }
+    
     EnemyCollisionCheck(enemy);
   }
  
@@ -161,26 +182,16 @@ void AzureTower::Game::EnemyCollisionCheck(Enemy &enemy)
   }
 }
 
-sf::Vector2f AzureTower::Game::enemySpawnPosition(sf::FloatRect playerPosition){
-  // Take player position.
-  // Return positions that enemies can spawn. A circle around the player. Monsters can spawn on its perimeter.
-  sf::Vector2f enemySpawnLocation({playerPosition.position.x + 100, playerPosition.position.y + 100}); // Hardcoded. Randomize this.
-
-  // Check if other enemies are already on that position.
-  // Check if monster cap has been reached.
-  // Return random location on that circle's boundary.
-  return enemySpawnLocation;
-}
-
 void AzureTower::Game::spawnSlime()
 {
-  auto enemySpawnLocation = enemySpawnPosition(player_.sprite_->getGlobalBounds());
+  // Spawn enemy at random position on circle boundary around player  
+  float randomAngle = angleDist_(gen_);
+  float spawnX = player_.sprite_->getGlobalBounds().position.x + SPAWN_RADIUS * std::cos(randomAngle);
+  float spawnY = player_.sprite_->getGlobalBounds().position.y + SPAWN_RADIUS * std::sin(randomAngle);
+  sf::Vector2f spawnPosition(spawnX, spawnY);
 
-  if (enemyClock_.getElapsedTime().asSeconds() > 2.0f && enemies_.size() < MAX_ENEMIES)
-  {
-    enemies_.emplace_back(SLIME_NAME, SLIME_HEALTH, SLIME_SPEED, enemySpawnLocation, textureManager_.load(SLIME_NAME));
-    enemyClock_.restart();
-  }
+  enemies_.emplace_back(SLIME_NAME, SLIME_HEALTH, SLIME_SPEED, spawnPosition, textureManager_.load(SLIME_NAME));
+  enemyClock_.restart();  
 }
 
 void AzureTower::Game::GameOver()
